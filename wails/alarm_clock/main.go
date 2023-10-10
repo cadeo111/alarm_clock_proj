@@ -18,8 +18,8 @@ func main() {
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:  "alarm_clock",
-		Width:  1024,
-		Height: 768,
+		Width:  800,
+		Height: 480,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
