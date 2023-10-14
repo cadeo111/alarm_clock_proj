@@ -1,25 +1,58 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import Fa from 'svelte-fa/src/fa.svelte';
-    import { faCaretDown, faCaretUp } from '@fortawesome/free-solid-svg-icons';
+    import { faArrowsLeftRightToLine, faCaretDown, faCaretUp } from '@fortawesome/free-solid-svg-icons';
 
-    let time: Date = new Date();
+    enum AlarmState { Unset, Set, Running, Finished };
 
-    enum AlarmState { Unset, Set, Running, Stopped };
+    let alarmState = AlarmState.Unset;
+    let alarmTime = new Date();
+    $: alarmHour = alarmTime.getHours();
+    $: alarmMinute = alarmTime.getMinutes();
+    $: alarmSecond = alarmTime.getSeconds();
 
-    $: alarmState = AlarmState.Unset;
-    $: alarmHour = time.getHours();
-    $: alarmMinute = time.getMinutes();
-    $: alarmSeconds = time.getSeconds();
+    let timeDiffText : string = "";
 
     onMount(() => {
 		  const interval = setInterval(() => { 
-        if (alarmState == AlarmState.Unset) {
-          time = new Date();
+        const currTime: Date = new Date();
+        switch (alarmState) {
+          case AlarmState.Unset:
+            // Update the clock to show the current time if no alarm is set
+            alarmTime = currTime;
+            break;
+          case AlarmState.Running:
+            // Update the time until text until alarm
+            const [ hours, minutes, seconds ] = getTimeDiff(currTime.getTime(), alarmTime.getTime());
+            if (hours == 0 && minutes == 0 && seconds == 0) {
+              alarmState = AlarmState.Finished;
+              timeDiffText = "";
+            } else {
+              timeDiffText = `${formatTime(hours)}:${formatTime(minutes)}:${formatTime(seconds)}`;
+            }
+            break;
+          case AlarmState.Finished:
+            playFinishAnim();
+            break;
         }
       }, 1000);
 		  return () => { clearInterval(interval); };
 	  });
+
+    const getTimeDiff = (currTimeMs: number, futureTimeMs: number): number[] => {
+      const timeDiffMs: number = futureTimeMs - currTimeMs;
+      const hours: number = Math.floor(timeDiffMs / 3600000);
+      const minutes: number = Math.floor((timeDiffMs % 3600000) / 60000);
+      const seconds: number = Math.floor((timeDiffMs % 60000) / 1000);
+      return [ hours, minutes, seconds ];
+    };
+
+    let colorIndex = 0;
+    const playFinishAnim = () => {
+      const colors: string[] = ["#848C8E", "#435058", "#BFB7B6", "#8E4A49", "#5F464B"];
+      document.body.style.backgroundColor = colors[colorIndex];
+      colorIndex = (colorIndex + 1) % colors.length;
+    };
 
     const formatTime = (n: number): string => (n <= 9) ? "0" + n : n.toString();
 
@@ -28,25 +61,24 @@
     const decreaseHour = () => alarmHour = (alarmHour == 0) ? 23 : alarmHour - 1;
     const decreaseMinute = () => alarmMinute = (alarmMinute == 0) ? 59 : alarmMinute - 1;
 
-    const setAlarm = (e) => {
+    const setAlarm = () => {
       alarmState = AlarmState.Set;
-      console.log("Alarm Set");
+      alarmSecond = 0;
     };
 
-    const startAlarm = (e) => {
+    const startAlarm = () => {
+      const currTime: Date = new Date();
+      alarmTime.setHours(alarmHour, alarmMinute, alarmSecond);
+      if (alarmTime.getTime() < currTime.getTime()) {
+        alert("Invalid alarm time: Time has already passed!");
+      }
       alarmState = AlarmState.Running;
-      console.log("Alarm Running");
     };
 
-    const stopAlarm = (e) => {
-      alarmState = AlarmState.Stopped;
-      console.log("Alarm Stopped");
-    };
-
-    const resetAlarm = (e) => {
+    const stopAlarm = () => {
       alarmState = AlarmState.Unset;
-      console.log("Alarm Unset");
-      time = new Date();
+      alarmTime = new Date();
+      document.body.style.backgroundColor = "black";
     };
 </script>
 
@@ -65,6 +97,8 @@
         <h1 class="alarm-hours">{formatTime(alarmHour)}</h1>
         <h1>:</h1>
         <h1 class="alarm-minutes">{formatTime(alarmMinute)}</h1>
+        <h1>:</h1>
+        <h1 class="alarm-seconds">{formatTime(alarmSecond)}</h1>
     </div>
     {#if alarmState == AlarmState.Set}
     <div class="alarm-setter">
@@ -78,18 +112,19 @@
     {/if}
     <pre> {#if alarmState == AlarmState.Unset} Current Time
           {:else if alarmState == AlarmState.Set} Press Start
-          {:else} Alarm Running!
+          {:else if alarmState == AlarmState.Running} {timeDiffText} left
+          {:else if alarmState == AlarmState.Finished} Alarm Finished!
           {/if}
     </pre>
     <div class="alarm-buttons">
         {#if alarmState == AlarmState.Unset}
           <button on:click={setAlarm}>Set Alarm</button>
         {:else if alarmState == AlarmState.Set}
-          <button on:click={startAlarm}>Start</button>
-          <button on:click={resetAlarm}>Reset</button>
-        {:else}
-          <button on:click={stopAlarm}>Stop</button>
-          <button on:click={resetAlarm}>Reset</button>
+          <button on:click={startAlarm}>Start Alarm</button>
+        {:else if alarmState == AlarmState.Running}
+          <button on:click={stopAlarm}>Stop Alarm</button>
+        {:else if alarmState == AlarmState.Finished}
+          <button on:click={stopAlarm}>Reset Alarm</button>
         {/if}
     </div>
 </div>
