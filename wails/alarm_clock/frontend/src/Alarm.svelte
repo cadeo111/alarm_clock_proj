@@ -129,10 +129,10 @@
                 console.log("hello");
                 increaseHour()
             }}>
-                <Fa icon={faCaretUp} size="7x"/>
+                <Fa icon={faCaretUp} size="5x"/>
             </button>
             <button on:click={increaseMinute}>
-                <Fa icon={faCaretUp} size="7x"/>
+                <Fa icon={faCaretUp} size="5x"/>
             </button>
         </div>
     {/if}
@@ -154,10 +154,10 @@
     {#if alarmState === AlarmState.Set}
         <div class="alarm-setter">
             <button on:click={decreaseHour}>
-                <Fa icon={faCaretDown} size="7x"/>
+                <Fa icon={faCaretDown} size="5x"/>
             </button>
             <button on:click={decreaseMinute}>
-                <Fa icon={faCaretDown} size="7x"/>
+                <Fa icon={faCaretDown} size="5x"/>
             </button>
         </div>
     {/if}
@@ -253,6 +253,7 @@
 
     .alarm-setter > button {
         z-index: 4;
+        padding:0;
         padding-left: 1rem;
         padding-right: 1rem;
         margin-left: 32px;

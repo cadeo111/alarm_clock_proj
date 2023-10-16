@@ -19,10 +19,11 @@ func main() {
 	err := wails.Run(&options.App{
 		Title:  "alarm_clock",
 		Width:  800,
-		Height: 480,
+		Height: 485,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
+		Frameless:       true,
 		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
 		OnStartup:        app.startup,
 		Bind: []interface{}{
